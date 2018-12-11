@@ -1,6 +1,9 @@
 package mapreduce;
 import mapreduce.JAES;
 
+
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
@@ -8,6 +11,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -19,11 +23,23 @@ import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 public class AES_MRR1 {
 	static int numReduceTasks =7;
 	static String password="xidian320";
+	static byte[] encryptV=JAES.encrypt("1", password);
+	static long start_job1_map;
+	static long end_job1_map;
+	static long start_job1_combiner;
+	static long end_job1_combiner;
+	static long start_job1_reduce;
+	static long end_job1_reduce;
+	static long start_job2_map;
+	static long end_job2_map;
+	static long start_job2_reduce;
+	static long end_job2_reduce;
 /*job1*/
 	 public static class MyMapper extends Mapper<LongWritable,Text,Text,Text>{
 		@Override
 		protected void setup(Mapper<LongWritable, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
+			start_job1_map=System.currentTimeMillis();
 			super.setup(context);
 		}
 		@Override
@@ -31,10 +47,17 @@ public class AES_MRR1 {
 				throws IOException, InterruptedException {
 			String valueStr=value.toString();
 			String [] values=valueStr.split("	");
-			byte[] encryptK=JAES.encrypt(values[5], password);
-			byte[] encryptV=JAES.encrypt("1", password);
-			context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))), new Text(new String(JAES.parseByte2HexStr(encryptV))));
-			
+//			byte[] encryptK=JAES.encrypt(values[5], password);
+//			byte[] encryptV=JAES.encrypt("1", password);
+//			context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))), new Text(new String(JAES.parseByte2HexStr(encryptV))));
+			context.write(new Text(values[5]), new Text(new String(JAES.parseByte2HexStr(encryptV))));
+		}
+		@Override
+		protected void cleanup(Mapper<LongWritable, Text, Text, Text>.Context context)
+			throws IOException, InterruptedException {
+		// TODO Auto-generated method stub
+		end_job1_map=System.currentTimeMillis();
+		super.cleanup(context);
 		}
 	}
 	public static class ShuffleReduce extends Reducer<Text,Text,Text,Text>{
@@ -42,6 +65,7 @@ public class AES_MRR1 {
 		protected void setup(Reducer<Text,Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
 			// TODO Auto-generated method stub
+			start_job1_reduce=System.currentTimeMillis();
 			super.setup(context);
 		}
 		@Override
@@ -55,9 +79,21 @@ public class AES_MRR1 {
 			byte[] encryptV=JAES.encrypt(String.valueOf(count), password);
 			context.write(key, new Text(new String(JAES.parseByte2HexStr(encryptV))));	
 		}	
+		@Override
+		protected void cleanup(Reducer<Text, Text, Text, Text>.Context context)
+				throws IOException, InterruptedException {
+			// TODO Auto-generated method stub
+			end_job1_reduce=System.currentTimeMillis();
+			super.cleanup(context);
+		}
 	}
 	static class MyCombiner extends Reducer<Text,Text,Text,Text>{
-		
+		@Override
+		protected void setup(Reducer<Text, Text, Text, Text>.Context context) throws IOException, InterruptedException {
+			// TODO Auto-generated method stub
+			super.setup(context);
+			start_job1_combiner=System.currentTimeMillis();
+		}
 		@Override
 		protected void reduce(Text key, Iterable<Text> values,Context context) throws IOException, InterruptedException {
 			int count=0;
@@ -66,6 +102,13 @@ public class AES_MRR1 {
 			}
 			byte[] encryptV=JAES.encrypt(String.valueOf(count), password);
 			context.write(key, new Text(new String(JAES.parseByte2HexStr(encryptV))));
+		}
+		@Override
+		protected void cleanup(Reducer<Text, Text, Text, Text>.Context context)
+				throws IOException, InterruptedException {
+			// TODO Auto-generated method stub
+			end_job1_combiner=System.currentTimeMillis();
+			super.cleanup(context);
 		}
 	}
 	static class MyPartitioner extends HashPartitioner<Text,Text>{
@@ -82,6 +125,7 @@ public class AES_MRR1 {
 			protected void setup(Mapper<LongWritable, Text, Text, Text>.Context context)
 					throws IOException, InterruptedException {
 				// TODO Auto-generated method stub
+				start_job2_map=System.currentTimeMillis();
 				super.setup(context);
 			}
 			@Override
@@ -99,12 +143,20 @@ public class AES_MRR1 {
 				context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))),new Text(new String(JAES.parseByte2HexStr(encryptV))));
 				}
 			}
+			@Override
+			protected void cleanup(Mapper<LongWritable, Text, Text, Text>.Context context)
+			throws IOException, InterruptedException {
+			// TODO Auto-generated method stub
+			end_job2_map=System.currentTimeMillis();
+			super.cleanup(context);
+			}
 		}
 		public static class ShuffleReduce2 extends Reducer<Text,Text,Text,Text>{
 			@Override
 			protected void setup(Reducer<Text,Text, Text, Text>.Context context)
 					throws IOException, InterruptedException {
 				// TODO Auto-generated method stub
+				start_job2_reduce=System.currentTimeMillis();
 				super.setup(context);
 			}
 			@Override
@@ -125,11 +177,16 @@ public class AES_MRR1 {
 				if(count!=0){
 				context.write(newKey, new Text(String.valueOf(count)));}
 			}
-			
+			@Override
+			protected void cleanup(Reducer<Text, Text, Text, Text>.Context context)
+					throws IOException, InterruptedException {
+				// TODO Auto-generated method stub
+				end_job2_reduce=System.currentTimeMillis();
+				super.cleanup(context);
+			}
 		}
 		static class MyPartitioner2 extends HashPartitioner<Text,Text>{
 			
-
 			@Override
 			public int getPartition(Text key, Text value, int numReduceTasks) {
 				byte[] decryptV=JAES.decrypt(JAES.parseHexStr2Byte(value.toString()), password);
@@ -140,7 +197,6 @@ public class AES_MRR1 {
 		}
 		
     public static void main(String[] args) throws IOException,URISyntaxException, ClassNotFoundException, InterruptedException{
-    	long startTime=System.currentTimeMillis();
     	//获取配置对象信息
     	Configuration conf = new Configuration();
 //job1设置 	
@@ -155,7 +211,7 @@ public class AES_MRR1 {
     	job1.setMapOutputValueClass(Text.class);
     	//Partition
     	job1.setCombinerClass(MyCombiner.class);
-    	job1.setPartitionerClass(MyPartitioner.class);
+    	job1.setPartitionerClass(MyPartitioner.class); 
     	//对reduce阶段设置、
     	job1.setReducerClass(ShuffleReduce.class);
     	job1.setOutputKeyClass(Text.class);
@@ -188,6 +244,7 @@ public class AES_MRR1 {
     	//控制器设置
         ControlledJob ctrlJob2= new ControlledJob(conf);
         ctrlJob2.setJob(job2);
+       
 // //设置作业之间关系，job2输入job1输出
 //        ctrlJob2.addDependingJob(ctrlJob1);
 // //设置主控制器，控制job1和job2两个作业
@@ -205,11 +262,21 @@ public class AES_MRR1 {
 //                break;
 //            }
 //        }
+        File file=new File("Log1");
+   		if (!file.exists()) {
+   			file.createNewFile();// 创建目标文件
+           }
+   		FileWriter fpout = new FileWriter(file,true);
+   		fpout.write("job1_map： "+(AES_MRR1.end_job1_map - AES_MRR1.start_job1_map)+"ms"+"	"
+   		+"job1_combiner： "+(AES_MRR1.end_job1_combiner - AES_MRR1.start_job1_combiner)+"ms"+"	"
+   		+"job1_reduce： "+(AES_MRR1.end_job1_reduce - AES_MRR1.start_job1_reduce)+"ms"+"	"
+   		+"job2_map： "+(AES_MRR1.end_job2_map - AES_MRR1.start_job2_map)+"ms"+"	"
+   		+"job2_reduce： "+(AES_MRR1.end_job2_reduce - AES_MRR1.start_job2_reduce)+"ms");
+   		fpout.close();
         if (job1.waitForCompletion(true)) {
-                   System.exit(job2.waitForCompletion(true) ? 0 : 1);
+                System.exit(job2.waitForCompletion(true) ? 0 : 1);
         	       }
-    	long endTime=System.currentTimeMillis();
-    	System.out.println("运行时间："+(endTime-startTime)+"ms");
+       
     }
 }
 
