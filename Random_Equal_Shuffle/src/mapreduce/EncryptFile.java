@@ -56,8 +56,8 @@ public class EncryptFile {
         FileWriter fpout2;
         byte[] plaintext;
         String s, aux, aux2;
-        fpin = new FileReader("E:/MapReduce/census_1990.txt");
-//        fpin = new FileReader("E:/test/原文件.txt");
+ //       fpin = new FileReader("E:/MapReduce/census_1990.txt");
+        fpin = new FileReader("E:/test/原文件.txt");
         fpout = new FileWriter("E:/test/Ecensus.txt");
         fpout2 = new FileWriter("E:/test/Dcensus.txt");
         

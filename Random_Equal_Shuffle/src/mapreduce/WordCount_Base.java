@@ -1,6 +1,7 @@
 package mapreduce;
 
 import java.io.IOException;
+import java.util.StringTokenizer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -14,16 +15,20 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 
-public class MapReduce {
+public class WordCount_Base {
 
 	 public static class MyMapper extends Mapper<LongWritable,Text,Text,IntWritable>{
 		@Override
 		protected void map(LongWritable key, Text value, Mapper<LongWritable, Text, Text, IntWritable>.Context context)
 				throws IOException, InterruptedException {
 			String valueStr=value.toString();
-			String [] values=valueStr.split("	");	
-			context.write(new Text(values[7].replace("\"", "")), new IntWritable(1));
-	
+			StringTokenizer stringTokenizer = new StringTokenizer( valueStr);
+			Text word = new Text();
+			while (stringTokenizer.hasMoreTokens()) {
+				String wordValue = stringTokenizer.nextToken();				
+				word.set(wordValue);				
+				context.write(word,new IntWritable(1));
+			}
 		}
 	}
 	public static class ShuffleReduce extends Reducer<Text,IntWritable,Text,IntWritable>{
@@ -63,7 +68,7 @@ public class MapReduce {
 //    	Job job =Job.getInstance(conf,"mapreduce");
     	Job job =new Job();
     	//设置job的运行主类
-    	job.setJarByClass(MapReduce.class);
+    	job.setJarByClass(WordCount_Base.class);
     	//对map阶段进行设置
     	job.setMapperClass(MyMapper.class);
     	job.setMapOutputKeyClass(Text.class);

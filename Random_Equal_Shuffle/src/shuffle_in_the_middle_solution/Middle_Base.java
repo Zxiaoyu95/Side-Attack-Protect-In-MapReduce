@@ -1,4 +1,4 @@
-package mapreduce;
+package shuffle_in_the_middle_solution;
 import mapreduce.JAES;
 import java.io.IOException;
 
@@ -13,7 +13,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 
-public class AES_Base {
+public class Middle_Base {
 	 static String password="xidian320";
 	 static byte[] encryptV=JAES.encrypt("1", password);
 	 public static class MyMapper extends Mapper<LongWritable,Text,Text,Text>{
@@ -31,7 +31,7 @@ public class AES_Base {
 //			byte[] encryptK=JAES.encrypt(values[5], password);
 //			byte[] encryptV=JAES.encrypt("1", password);
 //			context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))), new Text(new String(JAES.parseByte2HexStr(encryptV))));
-			context.write(new Text(values[29]), new Text(new String(JAES.parseByte2HexStr(encryptV))));
+			context.write(new Text(values[1]), new Text(new String(JAES.parseByte2HexStr(encryptV))));
 		}
 		@Override
 		protected void cleanup(Mapper<LongWritable, Text, Text, Text>.Context context)
@@ -105,7 +105,7 @@ public class AES_Base {
 //    	Job job =Job.getInstance(conf,"mapreduce");
     	Job job =new Job();
     	//设置job的运行主类
-    	job.setJarByClass(AES_Base.class);
+    	job.setJarByClass(Middle_Base.class);
     	//对map阶段进行设置
     	job.setMapperClass(MyMapper.class);
     	job.setMapOutputKeyClass(Text.class);
@@ -116,7 +116,7 @@ public class AES_Base {
     	job.setReducerClass(ShuffleReduce.class);
     	job.setPartitionerClass(MyPartitioner.class);
     	job.setOutputKeyClass(Text.class);
-    	job.setNumReduceTasks(7);//reduce 数量设定
+    	job.setNumReduceTasks(8);//reduce 数量设定
     	job.setOutputValueClass(Text.class);
     	FileOutputFormat.setOutputPath(job, new Path(args[1]));
     	//提交job

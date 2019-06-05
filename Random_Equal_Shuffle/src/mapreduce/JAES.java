@@ -139,17 +139,6 @@ public class JAES {
 	    System.out.println("ÃÜÎÄ×Ö·û´®£º" + code);
 		byte[] decrypt = JAES.decrypt(JAES.parseHexStr2Byte(code), password);
 		System.out.println("½âÃÜºó£º"+ new String(decrypt,"UTF-8"));
-//    	String txtname="E:\\MapReduce\\trip_jan.txt";
-//    	File filename = new File(txtname);
-//        InputStreamReader reader = new InputStreamReader(  
-//        new FileInputStream(filename)); 
-//        BufferedReader br = new BufferedReader(reader); 
-//        String line = "";  
-//        line = br.readLine();  
-//        while (line != null) {  
-//        	String[] splitStr=line.split("	");
-//            line = br.readLine(); 
-//        }  
 		
 	}
 }

@@ -2,6 +2,7 @@ package mapreduce;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.StringTokenizer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -16,7 +17,7 @@ import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 
-public class MRR2 {
+public class WordCount_MRR2 {
 	static int numReduceTasks =7;
 /*job1*/
 	 public static class MyMapper extends Mapper<LongWritable,Text,Text,Text>{
@@ -30,8 +31,13 @@ public class MRR2 {
 		protected void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {
 			String valueStr=value.toString();
-			String [] values=valueStr.split("	");
-			context.write(new Text(values[7].replace("\"", "")), new Text("1"));
+			StringTokenizer stringTokenizer = new StringTokenizer( valueStr);
+			Text word = new Text();
+			while (stringTokenizer.hasMoreTokens()) {
+				String wordValue = stringTokenizer.nextToken();				
+				word.set(wordValue);				
+				context.write(word,  new Text("1"));
+			}
 			
 		}
 	}
@@ -130,7 +136,7 @@ public class MRR2 {
 //    	Job job1 =Job.getInstance(conf,"job1");
     	Job job1 =new Job();
     	//设置job的运行主类
-    	job1.setJarByClass(MRR2.class);
+    	job1.setJarByClass(WordCount_MRR2.class);
     	FileInputFormat.setInputPaths(job1, new Path(args[0]));
     	//对map阶段进行设置
     	job1.setMapperClass(MyMapper.class);
@@ -153,7 +159,7 @@ public class MRR2 {
 //        Job job2 =Job.getInstance(conf,"job2");
         Job job2 =new Job();
     	//设置job的运行主类
-        job2.setJarByClass(MRR2.class);
+        job2.setJarByClass(WordCount_MRR2.class);
     	FileInputFormat.setInputPaths(job2, new Path(args[1]));
     	//对map阶段进行设置
     	job2.setMapperClass(MyMapper2.class);
