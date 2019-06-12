@@ -1,6 +1,9 @@
 package shuffle_in_the_middle_solution;
-import mapreduce.JAES;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -113,22 +116,43 @@ public class DataShuffle {
 		@Override
 		protected void reduce(Text key, Iterable<Text>values,Context context) throws IOException, InterruptedException {
 			int sum=0;
-			String ifdummy = "";
+			String ifdummy;
+			Map<String,Integer> map = new HashMap<String, Integer>();
 			for(Text i:values){
 				byte[] value=JAES.decrypt(JAES.parseHexStr2Byte(i.toString()), password);
 				String valueStr=new String(value).trim();
 				ifdummy = valueStr.substring(0,valueStr.indexOf("_"));
 				String count = valueStr.substring(valueStr.indexOf("_")+1,valueStr.length());
-				if(ifdummy != "321"){
-					sum+=Integer.valueOf(count);
+				if(!map.containsKey(ifdummy) && ifdummy != "321"){
+					map.put(ifdummy, 1);
 				}
+				else if(map.containsKey(ifdummy) && ifdummy != "321"){
+					//Set<String> s = map.keySet();
+					//for(String str:s){
+						map.put(ifdummy,(int)(map.get(ifdummy)+Integer.valueOf(count)));
+					//}
+				}
+				
+//				if(ifdummy != "321"){
+//					sum+=Integer.valueOf(count);
+//				}
 			}
-			if(ifdummy != "321"){
-				//byte[] keyB=JAES.decrypt(JAES.parseHexStr2Byte(key.toString()), password);
-				//String valueStr=new String(keyB).trim();
-				byte[] keyB = JAES.decrypt(JAES.parseHexStr2Byte(ifdummy.replace("\"", "").trim()), password);
-				context.write(new Text(new String(keyB)), new Text(String.valueOf(sum)));
-			    }
+			//if(ifdummy != "321"){
+//				byte[] keyB = JAES.decrypt(JAES.parseHexStr2Byte(ifdummy.replace("\"", "").trim()), password);
+//				context.write(new Text(new String(keyB)), new Text(String.valueOf(sum)));
+				//context.write(new Text(ifdummy.replace("\"", "").trim()), new Text(String.valueOf(sum)));
+			//}
+			Iterator<String> iterator = map.keySet().iterator();
+			
+			while(iterator.hasNext()){
+				//byte[] keyB = JAES.decrypt(JAES.parseHexStr2Byte(Vstr.replace("\"", "").trim()), password);
+				//String strD = new String(keyB).trim();
+					String Ikey = iterator.next();
+					if(Ikey != "321"){
+					context.write(new Text(Ikey.trim()), new Text(String.valueOf(map.get(Ikey))));
+					//context.write(new Text(new String (JAES.decrypt(JAES.parseHexStr2Byte(Vstr.trim()), password))), new Text(String.valueOf(map.get(Vstr))));
+					} 
+				}
 			}
 		@Override
 		protected void cleanup(Reducer<Text, Text, Text, Text>.Context context)
@@ -145,8 +169,8 @@ public class DataShuffle {
 			//byte[] decryptV=JAES.decrypt(JAES.parseHexStr2Byte(value.toString()), password);
 			String keyStr=new String(decryptK).trim();
 			//String valueStr = new String(decryptV);
-			int r =Integer.valueOf(keyStr);
-			return r;		
+			int rid =Integer.valueOf(keyStr);
+			return rid;		
 		}
 	}
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException{
