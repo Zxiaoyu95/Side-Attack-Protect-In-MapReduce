@@ -71,8 +71,9 @@ public class Offline_Phase{
             for (Map.Entry<String, Integer> pram : map.entrySet()){
             	float f = ((float)pram.getValue()/CountAll);
             	String fStr = String.valueOf(f);
-            	context.write(new Text(pram.getKey()), new Text(fStr+"_"+String.valueOf(pram.getValue())));
+            	//context.write(new Text(pram.getKey()), new Text(fStr+"_"+String.valueOf(pram.getValue())));
             }
+            CountAll = 0;
 			super.cleanup(context);
 		}
 		
