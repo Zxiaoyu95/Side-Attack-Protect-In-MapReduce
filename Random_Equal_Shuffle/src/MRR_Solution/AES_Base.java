@@ -1,5 +1,4 @@
-package mapreduce;
-import mapreduce.JAES;
+package MRR_Solution;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
@@ -12,6 +11,8 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
+
+import MRR_Solution.JAES;
 
 public class AES_Base {
 	 static String password="xidian320";

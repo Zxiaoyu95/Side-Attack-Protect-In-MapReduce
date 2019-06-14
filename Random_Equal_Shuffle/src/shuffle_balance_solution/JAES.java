@@ -1,4 +1,4 @@
-package mapreduce;
+package shuffle_balance_solution;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

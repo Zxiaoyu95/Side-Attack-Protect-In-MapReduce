@@ -1,4 +1,4 @@
-package mapreduce;
+package MRR_Solution;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.io.Text;

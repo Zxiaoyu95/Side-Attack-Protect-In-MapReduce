@@ -1,4 +1,4 @@
-package mapreduce;
+package MRR_Solution;
 
 import java.io.IOException;
 import java.util.StringTokenizer;

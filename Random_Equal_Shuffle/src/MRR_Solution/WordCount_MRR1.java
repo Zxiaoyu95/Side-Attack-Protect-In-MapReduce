@@ -1,7 +1,8 @@
-package mapreduce;
+package MRR_Solution;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.StringTokenizer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -16,22 +17,27 @@ import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 
-public class MRR3 {
+public class WordCount_MRR1 {
 	static int numReduceTasks =7;
 /*job1*/
 	 public static class MyMapper extends Mapper<LongWritable,Text,Text,Text>{
 		@Override
 		protected void setup(Mapper<LongWritable, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
-			// TODO Auto-generated method stub
 			super.setup(context);
 		}
 		@Override
 		protected void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {
 			String valueStr=value.toString();
-			String [] values=valueStr.split("	");
-			context.write(new Text(values[7].replace("\"", "")), new Text("1"));
+			StringTokenizer stringTokenizer = new StringTokenizer( valueStr);
+			Text word = new Text();
+			while (stringTokenizer.hasMoreTokens()) {
+				String wordValue = stringTokenizer.nextToken();				
+				word.set(wordValue);				
+				context.write(word,  new Text("1"));
+			}
+	//		context.write(new Text(values[7].replace("\"", "")), new Text("1"));
 			
 		}
 	}
@@ -50,15 +56,6 @@ public class MRR3 {
 			}
 			context.write(key, new Text(String.valueOf(count)));	
 		}	
-		@Override
-		protected void cleanup(Reducer<Text, Text, Text, Text>.Context context)
-				throws IOException, InterruptedException {
-			int N=50;
-			for(int i=0;i<N;i++){
-				context.write(new Text("FAKE_"+i), new Text("0"));
-			}
-			super.cleanup(context);
-		}
 	}
 	static class MyCombiner extends Reducer<Text,Text,Text,Text>{
 		
@@ -72,6 +69,8 @@ public class MRR3 {
 		}
 	}
 	static class MyPartitioner extends HashPartitioner<Text,Text>{
+		
+
 		@Override
 		public int getPartition(Text key, Text value, int numReduceTasks) {
 			int s = (int)(Math.random()*numReduceTasks);
@@ -91,7 +90,10 @@ public class MRR3 {
 					throws IOException, InterruptedException {
 				String valueStr=value.toString();
 				String [] values=valueStr.split("	");
-				context.write(new Text(values[0]),new Text(values[1]));
+				int r=(values[0].hashCode()&Integer.MAX_VALUE)%numReduceTasks;
+				for(int i=0;i<numReduceTasks;i++){
+				context.write(new Text(values[0]),new Text(values[1]+"_"+i+"#"+r));
+				}
 			}
 		}
 		public static class ShuffleReduce2 extends Reducer<Text,Text,Text,Text>{
@@ -104,22 +106,28 @@ public class MRR3 {
 			@Override
 			protected void reduce(Text key, Iterable<Text>values,Context context) throws IOException, InterruptedException {
 				int count=0;
+				Text newKey=new Text();
 				for(Text v:values){
-					count+=Integer.parseInt(v.toString());
+					int j=Integer.parseInt(v.toString().substring(v.toString().indexOf("_")+1,v.toString().indexOf("#")));
+					int r=Integer.parseInt(v.toString().substring(v.toString().indexOf("#")+1,v.toString().length()));
+		            if(j==r){
+							count+=Integer.parseInt(v.toString().substring(0,v.toString().indexOf("_")));
+							newKey=key;
+		            }
 				}
 				if(count!=0){
-				context.write(key, new Text(String.valueOf(count)));
-				}
+				context.write(newKey, new Text(String.valueOf(count)));}
 			}
-	
+			
 		}
 		static class MyPartitioner2 extends HashPartitioner<Text,Text>{
+			
 
 			@Override
 			public int getPartition(Text key, Text value, int numReduceTasks) {
-				return (key.hashCode()&Integer.MAX_VALUE)%numReduceTasks;
-				
-				
+				String vuleStr=value.toString();
+				int r = Integer.parseInt(vuleStr.substring(vuleStr.indexOf("_")+1,vuleStr.indexOf("#")));
+				return r;
 			}
 		}
 		
@@ -128,11 +136,10 @@ public class MRR3 {
     	//获取配置对象信息
     	Configuration conf = new Configuration();
 //job1设置 	
-//    	Job job1 =Job.getInstance(conf,"job1");
+//    	Job job1 =Job.getInstance(conf,"job1"); 
     	Job job1 =new Job();
-    	
     	//设置job的运行主类
-    	job1.setJarByClass(MRR3.class);
+    	job1.setJarByClass(WordCount_MRR1.class);
     	FileInputFormat.setInputPaths(job1, new Path(args[0]));
     	//对map阶段进行设置
     	job1.setMapperClass(MyMapper.class);
@@ -155,7 +162,7 @@ public class MRR3 {
 //        Job job2 =Job.getInstance(conf,"job2");
         Job job2 =new Job();
     	//设置job的运行主类
-        job2.setJarByClass(MRR3.class);
+        job2.setJarByClass(WordCount_MRR1.class);
     	FileInputFormat.setInputPaths(job2, new Path(args[1]));
     	//对map阶段进行设置
     	job2.setMapperClass(MyMapper2.class);
@@ -191,9 +198,11 @@ public class MRR3 {
 //            }
 //        }
         if (job1.waitForCompletion(true)) {
-            System.exit(job2.waitForCompletion(true) ? 0 : 1);
- 	       }
+                   System.exit(job2.waitForCompletion(true) ? 0 : 1);
+        	       }
     	long endTime=System.currentTimeMillis();
     	System.out.println("运行时间："+(endTime-startTime)+"ms");
     }
 }
+
+	

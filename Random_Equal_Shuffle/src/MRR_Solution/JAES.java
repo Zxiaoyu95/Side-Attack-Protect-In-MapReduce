@@ -1,4 +1,4 @@
-package shuffle_balabce_solution;
+package MRR_Solution;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

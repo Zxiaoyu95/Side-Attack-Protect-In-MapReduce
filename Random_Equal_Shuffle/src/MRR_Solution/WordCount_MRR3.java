@@ -1,10 +1,9 @@
-package mapreduce;
+package MRR_Solution;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.security.Key;
+import java.util.StringTokenizer;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -18,9 +17,8 @@ import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 
-public class AGCM_MRR2 {
+public class WordCount_MRR3 {
 	static int numReduceTasks =7;
-	static String password="Xidian";
 /*job1*/
 	 public static class MyMapper extends Mapper<LongWritable,Text,Text,Text>{
 		@Override
@@ -33,11 +31,13 @@ public class AGCM_MRR2 {
 		protected void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {
 			String valueStr=value.toString();
-			String [] values=valueStr.split("	");
-			byte[] encryptK=GCM.encrypt(values[5],password);
-			byte[] encryptV=GCM.encrypt("1",password);
-			context.write(new Text(Base64.encodeBase64String(encryptK)), new Text(Base64.encodeBase64String(encryptV)));
-			
+			StringTokenizer stringTokenizer = new StringTokenizer( valueStr);
+			Text word = new Text();
+			while (stringTokenizer.hasMoreTokens()) {
+				String wordValue = stringTokenizer.nextToken();				
+				word.set(wordValue);				
+				context.write(word,  new Text("1"));
+			}
 		}
 	}
 	public static class ShuffleReduce extends Reducer<Text,Text,Text,Text>{
@@ -51,13 +51,19 @@ public class AGCM_MRR2 {
 		protected void reduce(Text key, Iterable<Text>values,Context context) throws IOException, InterruptedException {
 			int count=0;
 			for(Text v:values){
-				byte[] decryptV=GCM.decrypt(Base64.decodeBase64(v.toString()),password);
-				String s=new String(decryptV);
-				count+=Integer.parseInt(s);
+				count+=Integer.parseInt(v.toString());
 			}
-			byte[] encryptV=GCM.encrypt(String.valueOf(count),password);
-			context.write(key, new Text(Base64.encodeBase64String(encryptV)));	
+			context.write(key, new Text(String.valueOf(count)));	
 		}	
+		@Override
+		protected void cleanup(Reducer<Text, Text, Text, Text>.Context context)
+				throws IOException, InterruptedException {
+			int N=50;
+			for(int i=0;i<N;i++){
+				context.write(new Text("FAKE_"+i), new Text("0"));
+			}
+			super.cleanup(context);
+		}
 	}
 	static class MyCombiner extends Reducer<Text,Text,Text,Text>{
 		
@@ -65,15 +71,12 @@ public class AGCM_MRR2 {
 		protected void reduce(Text key, Iterable<Text> values,Context context) throws IOException, InterruptedException {
 			int count=0;
 			for(Text v:values){
-				count+=1;
+				count+=Integer.parseInt(v.toString());
 			}
-			byte[] encryptV=GCM.encrypt(String.valueOf(count),password);
-			context.write(key, new Text(Base64.encodeBase64String(encryptV)));
+			context.write(key, new Text(String.valueOf(count)));
 		}
 	}
 	static class MyPartitioner extends HashPartitioner<Text,Text>{
-		
-
 		@Override
 		public int getPartition(Text key, Text value, int numReduceTasks) {
 			int s = (int)(Math.random()*numReduceTasks);
@@ -91,21 +94,9 @@ public class AGCM_MRR2 {
 			@Override
 			protected void map(LongWritable key, Text value, Context context)
 					throws IOException, InterruptedException {
-				String[] split=value.toString().split("	");
-				byte[] decryptK=GCM.decrypt(Base64.decodeBase64(split[0]),password);	
-				byte[] decryptV=GCM.decrypt(Base64.decodeBase64(split[1]),password);	
-				String keyStr=new String(decryptK);
-				String valueStr=new String(decryptV);
-				int r=(keyStr.hashCode()&Integer.MAX_VALUE)%numReduceTasks;
-				int s = (int)(Math.random()*numReduceTasks);
-				byte[] encryptK=GCM.encrypt(keyStr, password);
-				byte[] encryptV=GCM.encrypt("TURE_"+valueStr+"#"+r, password);
-				context.write(new Text(Base64.encodeBase64String(encryptK)),new Text(Base64.encodeBase64String(encryptV)));
-				if(s<(numReduceTasks/2)){
-					int p = (int)(Math.random()*numReduceTasks);
-					byte[] encryptF=GCM.encrypt("FAKE_"+0+"#"+p, password);
-					context.write(new Text(Base64.encodeBase64String(encryptK)),new Text(Base64.encodeBase64String(encryptF)));
-				}
+				String valueStr=value.toString();
+				String [] values=valueStr.split("	");
+				context.write(new Text(values[0]),new Text(values[1]));
 			}
 		}
 		public static class ShuffleReduce2 extends Reducer<Text,Text,Text,Text>{
@@ -119,25 +110,21 @@ public class AGCM_MRR2 {
 			protected void reduce(Text key, Iterable<Text>values,Context context) throws IOException, InterruptedException {
 				int count=0;
 				for(Text v:values){
-					byte[] value=GCM.decrypt(Base64.decodeBase64(v.toString()), password);
-					String valueStr=new String(value);
-					count+=Integer.parseInt(valueStr.substring(valueStr.indexOf("_")+1,valueStr.indexOf("#")));
+					count+=Integer.parseInt(v.toString());
 				}
 				if(count!=0){
-					byte[] k=GCM.decrypt(Base64.decodeBase64(key.toString()), password);
-					context.write(new Text(new String(k).replace("\"", "")), new Text(String.valueOf(count)));
+				context.write(key, new Text(String.valueOf(count)));
 				}
 			}
 	
 		}
 		static class MyPartitioner2 extends HashPartitioner<Text,Text>{
-			
 
 			@Override
 			public int getPartition(Text key, Text value, int numReduceTasks) {
-				byte[] v=GCM.decrypt(Base64.decodeBase64(value.toString()), password);
-				String vuleStr=new String(v);
-				return Integer.parseInt(vuleStr.substring(vuleStr.indexOf("#")+1,vuleStr.length()));
+				return (key.hashCode()&Integer.MAX_VALUE)%numReduceTasks;
+				
+				
 			}
 		}
 		
@@ -148,8 +135,9 @@ public class AGCM_MRR2 {
 //job1设置 	
 //    	Job job1 =Job.getInstance(conf,"job1");
     	Job job1 =new Job();
+    	
     	//设置job的运行主类
-    	job1.setJarByClass(AGCM_MRR2.class);
+    	job1.setJarByClass(WordCount_MRR3.class);
     	FileInputFormat.setInputPaths(job1, new Path(args[0]));
     	//对map阶段进行设置
     	job1.setMapperClass(MyMapper.class);
@@ -172,7 +160,7 @@ public class AGCM_MRR2 {
 //        Job job2 =Job.getInstance(conf,"job2");
         Job job2 =new Job();
     	//设置job的运行主类
-        job2.setJarByClass(AGCM_MRR2.class);
+        job2.setJarByClass(WordCount_MRR3.class);
     	FileInputFormat.setInputPaths(job2, new Path(args[1]));
     	//对map阶段进行设置
     	job2.setMapperClass(MyMapper2.class);
@@ -214,5 +202,3 @@ public class AGCM_MRR2 {
     	System.out.println("运行时间："+(endTime-startTime)+"ms");
     }
 }
-
-	

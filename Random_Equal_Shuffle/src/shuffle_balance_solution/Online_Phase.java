@@ -1,4 +1,4 @@
-package shuffle_balabce_solution;
+package shuffle_balance_solution;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
