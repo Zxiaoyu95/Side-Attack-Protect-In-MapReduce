@@ -57,7 +57,7 @@ public class Online_Phase{
 				MapSum++;
 				staticStr = String.valueOf(MapSum);			
 			    }
-			//MapSum=0;
+			MapSum=0;
 			byte[] Key=JAES.decrypt(JAES.parseHexStr2Byte(key.toString()), password);
 			String KeyStr=new String(Key).trim();
 			map.put(KeyStr,Integer.valueOf(staticStr));
@@ -73,7 +73,7 @@ public class Online_Phase{
             	String fStr = String.valueOf(f);
             	context.write(new Text(pram.getKey()), new Text(fStr+"_"+String.valueOf(pram.getValue())));
             }
-            //CountAll = 0;
+            CountAll = 0;
 			super.cleanup(context);
 		}
 		
