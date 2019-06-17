@@ -22,7 +22,7 @@ public class DataShuffle {
 	 static int numReduceTasks =8;
 	 static String dummyStr = "321";
 	 static byte[] encryptD=JAES.encrypt(dummyStr, password);
-	 static int MAX = 10000;
+	 static int MAX = 20000;
 	 static int num0 = 0;
 	 static int num1 = 0;
 	 static int num2 = 0;
@@ -43,7 +43,7 @@ public class DataShuffle {
 				throws IOException, InterruptedException {
 			String valueStr=value.toString();
 			String [] values=valueStr.split("	");
-			String valuesV = values[1];
+			String valuesV = values[5];
 			byte[] decryptV=JAES.decrypt(JAES.parseHexStr2Byte(valuesV), password);
 			String keyStr=new String(decryptV).trim();
 			int r = (keyStr.hashCode()&Integer.MAX_VALUE)%numReduceTasks;

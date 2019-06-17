@@ -16,26 +16,36 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 
-import MRR_Solution.JAES;
 public class Main_Job {
+	  
 	 static Map<String,Float> PickUp_M = new HashMap<String,Float>();//pickup概率分布map
 	 static Map<String,Float> PassenN_M = new HashMap<String,Float>();//passenN概率分布map
 	 static Map<Integer,Float> PassenN_Reducer_M = new HashMap<Integer,Float>();//初始reducer对应概率map
+	 static Map<Integer,Float> PickUp_Reducer_M = new HashMap<Integer,Float>();//初始reducer对应概率map
 	 static Map<String,Integer> Key_Reducer_M = new HashMap<String,Integer>(); //key对应reducer号map
 	 static float PassenN_Max_f = (float) 0.71;
+	 static float PickUp_Max_f = (float) 0.038;
 	 static String password="xidian320";
-	 static int numReduceTasks = 2;
+	 static int numReduceTasks = (int) (2/PassenN_Max_f);
+	 //static int numReduceTasks = (int) (2/PickUp_Max_f);
 	 static String staticStr = "";
 	 static int MapSum = 0;
 	 static Map<String,Integer> map=new HashMap<String, Integer>();
 	 static int CountAll = 0;
 	 static float key_f;
+	 static byte[] encryptC=JAES.encrypt("1", password);
 	 public static class MyMapper extends Mapper<LongWritable,Text,Text,Text>{
 		 @Override
 		protected void setup(Mapper<LongWritable, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
 			PassenN_M.put("0",(float) 0.00);PassenN_M.put("1",(float) 0.71);PassenN_M.put("2",(float) 0.13);PassenN_M.put("3",(float) 0.04);
 			PassenN_M.put("4",(float) 0.02);PassenN_M.put("5",(float) 0.06);PassenN_M.put("6",(float) 0.04);
+			PickUp_M.put("2013-1-1",(float) 0.028);PickUp_M.put("2013-1-2",(float) 0.026);PickUp_M.put("2013-1-3",(float) 0.029);PickUp_M.put("2013-1-4",(float) 0.032);PickUp_M.put("2013-1-5",(float) 0.032);PickUp_M.put("2013-1-6",(float) 0.028);
+			PickUp_M.put("2013-1-7",(float) 0.027);PickUp_M.put("2013-1-8",(float) 0.029);PickUp_M.put("2013-1-9",(float) 0.030);PickUp_M.put("2013-1-10",(float) 0.032);PickUp_M.put("2013-1-11",(float) 0.035);PickUp_M.put("2013-1-12",(float) 0.034);
+			PickUp_M.put("2013-1-13",(float) 0.030);PickUp_M.put("2013-1-14",(float) 0.030);PickUp_M.put("2013-1-15",(float) 0.033);PickUp_M.put("2013-1-16",(float) 0.034);PickUp_M.put("2013-1-17",(float) 0.035);PickUp_M.put("2013-1-18",(float) 0.037);
+			PickUp_M.put("2013-1-19",(float) 0.034);PickUp_M.put("2013-1-20",(float) 0.031);PickUp_M.put("2013-1-21",(float) 0.026);PickUp_M.put("2013-1-22",(float) 0.033);PickUp_M.put("2013-1-23",(float) 0.036);PickUp_M.put("2013-1-24",(float) 0.036);
+			PickUp_M.put("2013-1-25",(float) 0.036);PickUp_M.put("2013-1-26",(float) 0.038);PickUp_M.put("2013-1-27",(float) 0.032);PickUp_M.put("2013-1-28",(float) 0.030);PickUp_M.put("2013-1-29",(float) 0.032);PickUp_M.put("2013-1-30",(float) 0.033);
+			PickUp_M.put("2013-1-31",(float) 0.035);
 			for(int i=0;i<numReduceTasks;i++){
 				PassenN_Reducer_M.put(i,PassenN_Max_f);
 			}
@@ -58,7 +68,7 @@ public class Main_Job {
 				key_f=PassenN_M.get(keyStr);
 				for(Map.Entry<Integer, Float> entry : PassenN_Reducer_M.entrySet()){
 					if(entry.getValue() >= key_f ){
-						PassenN_Reducer_M.put(entry.getKey(),entry.getValue()-key_f);//更新map
+						PassenN_Reducer_M.put(entry.getKey(),entry.getValue()-key_f);//装箱算法FFD更新map
 						Key_Reducer_M.put(keyStr,entry.getKey());
 						break;
 					}
@@ -68,7 +78,8 @@ public class Main_Job {
 				}
 				
 			}
-			context.write(new Text(keyV), new Text(valuesV));
+			//context.write(new Text(keyV), new Text(valuesV));
+			context.write(new Text(keyV), new Text(new String(JAES.parseByte2HexStr(encryptC))));
 		}
 		@Override
 		protected void cleanup(Mapper<LongWritable, Text, Text, Text>.Context context)
@@ -130,7 +141,7 @@ public class Main_Job {
    	job.setReducerClass(ShuffleReduce.class);
    	job.setPartitionerClass(MyPartitioner.class);
    	job.setOutputKeyClass(Text.class);
-   	job.setNumReduceTasks(2);//reduce 数量设定
+   	job.setNumReduceTasks(numReduceTasks);//reduce 数量设定
    	job.setOutputValueClass(Text.class);
    	FileOutputFormat.setOutputPath(job, new Path(args[1]));
    	//提交job
