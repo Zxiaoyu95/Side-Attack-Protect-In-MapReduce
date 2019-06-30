@@ -1,10 +1,8 @@
 package MRR_Solution;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -19,45 +17,26 @@ import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 
-public class AES_MRR3 {
+public class MRRB_dPOB {
 	static int numReduceTasks =7;
-	static String password="xidian320";
-	static byte[] encryptV=JAES.encrypt("1", password);
-	static long start_job1_map;
-	static long end_job1_map;
-	static long start_job1_combiner;
-	static long end_job1_combiner;
-	static long start_job1_reduce;
-	static long end_job1_reduce;
-	static long start_job2_map;
-	static long end_job2_map;
-	static long start_job2_reduce;
-	static long end_job2_reduce;
+	static ArrayList<String> dPOB = new ArrayList<String>();
+	static ArrayList<String> S_dPOB = new ArrayList<String>();
 /*job1*/
 	 public static class MyMapper extends Mapper<LongWritable,Text,Text,Text>{
 		@Override
 		protected void setup(Mapper<LongWritable, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
-			// TODO Auto-generated method stub
+			dPOB.add("6");dPOB.add("5");dPOB.add("4");
+			dPOB.add("3");dPOB.add("2");dPOB.add("1");dPOB.add("0");
 			super.setup(context);
-			start_job1_map=System.currentTimeMillis();
 		}
 		@Override
 		protected void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {
 			String valueStr=value.toString();
 			String [] values=valueStr.split("	");
-//			byte[] encryptK=JAES.encrypt(values[5	], password);
-//			byte[] encryptV=JAES.encrypt("1", password);
-//			context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))), new Text(new String(JAES.parseByte2HexStr(encryptV))));
-			context.write(new Text(values[29]), new Text(new String(JAES.parseByte2HexStr(encryptV))));	
-		}
-		@Override
-		protected void cleanup(Mapper<LongWritable, Text, Text, Text>.Context context)
-				throws IOException, InterruptedException {
-			// TODO Auto-generated method stub
-			super.cleanup(context);
-			end_job1_map=System.currentTimeMillis();
+			context.write(new Text(values[35].replace("\"", "")), new Text("1"));
+			
 		}
 	}
 	public static class ShuffleReduce extends Reducer<Text,Text,Text,Text>{
@@ -66,54 +45,38 @@ public class AES_MRR3 {
 				throws IOException, InterruptedException {
 			// TODO Auto-generated method stub
 			super.setup(context);
-			start_job1_reduce=System.currentTimeMillis();
 		}
 		@Override
 		protected void reduce(Text key, Iterable<Text>values,Context context) throws IOException, InterruptedException {
 			int count=0;
 			for(Text v:values){
-				byte[] decryptV=JAES.decrypt(JAES.parseHexStr2Byte(v.toString()), password);
-				String s =new String(decryptV).trim();
-				count+=Integer.parseInt(s);
+				count+=Integer.parseInt(v.toString());
 			}
-			byte[] encryptV=JAES.encrypt(String.valueOf(count), password);
-			context.write(key, new Text(new String(JAES.parseByte2HexStr(encryptV))));	
+			context.write(key, new Text(String.valueOf(count)));	
 		}	
 		@Override
 		protected void cleanup(Reducer<Text, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
-			int N=50;
-			for(int i=0;i<N;i++){
-				byte[] encryptK=JAES.encrypt("FAKE_"+i, password);
-				byte[] encryptV=JAES.encrypt("0", password);
-				context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))), new Text(new String(JAES.parseByte2HexStr(encryptV))));
+			for (String entry : dPOB){
+				if(! S_dPOB.contains(entry)){
+					context.write(new Text(entry), new Text("0"));
+				}
 			}
 			super.cleanup(context);
-			end_job1_reduce=System.currentTimeMillis();
 		}
 	}
 	static class MyCombiner extends Reducer<Text,Text,Text,Text>{
-		@Override
-		protected void setup(Reducer<Text, Text, Text, Text>.Context context) throws IOException, InterruptedException {
-			// TODO Auto-generated method stub
-			super.setup(context);
-			start_job1_combiner=System.currentTimeMillis();
-		}
+		
 		@Override
 		protected void reduce(Text key, Iterable<Text> values,Context context) throws IOException, InterruptedException {
 			int count=0;
 			for(Text v:values){
-				count+=1;
+				count+=Integer.parseInt(v.toString());
 			}
-			byte[] encryptV=JAES.encrypt(String.valueOf(count), password);
-			context.write(key, new Text(new String(JAES.parseByte2HexStr(encryptV))));
-		}
-		@Override
-		protected void cleanup(Reducer<Text, Text, Text, Text>.Context context)
-				throws IOException, InterruptedException {
-			// TODO Auto-generated method stub
-			super.cleanup(context);
-			end_job1_combiner=System.currentTimeMillis();
+			if(! S_dPOB.contains(key.toString())){
+				S_dPOB.add(key.toString());
+			}
+			context.write(key, new Text(String.valueOf(count)));
 		}
 	}
 	static class MyPartitioner extends HashPartitioner<Text,Text>{
@@ -130,20 +93,13 @@ public class AES_MRR3 {
 					throws IOException, InterruptedException {
 				// TODO Auto-generated method stub
 				super.setup(context);
-				start_job2_map=System.currentTimeMillis();
 			}
 			@Override
 			protected void map(LongWritable key, Text value, Context context)
 					throws IOException, InterruptedException {
-				String[] split=value.toString().split("	");
-				context.write(new Text(split[0]),new Text(split[1]));
-			}
-			@Override
-			protected void cleanup(Mapper<LongWritable, Text, Text, Text>.Context context)
-			throws IOException, InterruptedException {
-			// TODO Auto-generated method stub
-			super.cleanup(context);
-			end_job2_map=System.currentTimeMillis();
+				String valueStr=value.toString();
+				String [] values=valueStr.split("	");
+				context.write(new Text(values[0]),new Text(values[1]));
 			}
 		}
 		public static class ShuffleReduce2 extends Reducer<Text,Text,Text,Text>{
@@ -152,35 +108,24 @@ public class AES_MRR3 {
 					throws IOException, InterruptedException {
 				// TODO Auto-generated method stub
 				super.setup(context);
-				start_job2_reduce=System.currentTimeMillis();
 			}
 			@Override
 			protected void reduce(Text key, Iterable<Text>values,Context context) throws IOException, InterruptedException {
 				int count=0;
 				for(Text v:values){
-					byte[] value=JAES.decrypt(JAES.parseHexStr2Byte(v.toString()), password);
-					String valueStr=new String(value).trim();
-					count+=Integer.parseInt(valueStr);
+					count+=Integer.parseInt(v.toString());
 				}
 				if(count!=0){
-					byte[] k=JAES.decrypt(JAES.parseHexStr2Byte(key.toString()), password);
-					context.write(new Text(new String(k).trim().replace("\"", "")), new Text(String.valueOf(count)));
+				context.write(key, new Text(String.valueOf(count)));
 				}
 			}
-			@Override
-			protected void cleanup(Reducer<Text, Text, Text, Text>.Context context)
-					throws IOException, InterruptedException {
-				// TODO Auto-generated method stub
-				super.cleanup(context);
-				end_job2_reduce=System.currentTimeMillis();
-			}
+	
 		}
 		static class MyPartitioner2 extends HashPartitioner<Text,Text>{
+
 			@Override
 			public int getPartition(Text key, Text value, int numReduceTasks) {
-				byte[] k=JAES.decrypt(JAES.parseHexStr2Byte(key.toString()), password);
-				String keyStr=new String(k).trim();
-				return (keyStr.hashCode()&Integer.MAX_VALUE)%numReduceTasks;
+				return (key.hashCode()&Integer.MAX_VALUE)%numReduceTasks;
 				
 				
 			}
@@ -195,7 +140,7 @@ public class AES_MRR3 {
     	Job job1 =new Job();
     	
     	//设置job的运行主类
-    	job1.setJarByClass(AES_MRR3.class);
+    	job1.setJarByClass(MRRB_dPOB.class);
     	FileInputFormat.setInputPaths(job1, new Path(args[0]));
     	//对map阶段进行设置
     	job1.setMapperClass(MyMapper.class);
@@ -218,7 +163,7 @@ public class AES_MRR3 {
 //        Job job2 =Job.getInstance(conf,"job2");
         Job job2 =new Job();
     	//设置job的运行主类
-        job2.setJarByClass(AES_MRR3.class);
+        job2.setJarByClass(MRRB_dPOB.class);
     	FileInputFormat.setInputPaths(job2, new Path(args[1]));
     	//对map阶段进行设置
     	job2.setMapperClass(MyMapper2.class);
@@ -253,17 +198,6 @@ public class AES_MRR3 {
 //                break;
 //            }
 //        }
-        File file=new File("Log3");
-    		if (!file.exists()) {
-    			file.createNewFile();// 创建目标文件
-            }
-    		FileWriter fpout = new FileWriter(file,true);
-    		fpout.write("job1_map： "+(end_job1_map - start_job1_map)+"ms"+"	"
-    		+"job1_combiner： "+(end_job1_combiner - start_job1_combiner)+"ms"+"	"
-    		+"job1_reduce： "+(end_job1_reduce - start_job1_reduce)+"ms"+"	"
-    		+"job2_map： "+(end_job2_map - start_job2_map)+"ms"+"	"
-    		+"job2_reduce： "+(end_job2_reduce - start_job2_reduce)+"ms");
-    		fpout.close();
         if (job1.waitForCompletion(true)) {
             System.exit(job2.waitForCompletion(true) ? 0 : 1);
  	       }
