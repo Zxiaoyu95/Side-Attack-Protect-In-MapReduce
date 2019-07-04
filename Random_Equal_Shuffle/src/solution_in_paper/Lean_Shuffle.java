@@ -15,21 +15,33 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 
-import MRR_Solution.JAES;
-
 public class Lean_Shuffle {
 	static int numReduceTasks =7;
 	static String password="xidian320";
 	static byte[] encryptV=JAES.encrypt("1", password);
-	static ArrayList<String> passenN = new ArrayList<String>();
-	static ArrayList<String> S_passenN = new ArrayList<String>();
+	static ArrayList<String> key_set = new ArrayList<String>();
+	static ArrayList<String> S_key_set = new ArrayList<String>();
 	 public static class MyMapper extends Mapper<LongWritable,Text,Text,Text>{
 			@Override
 			protected void setup(Mapper<LongWritable, Text, Text, Text>.Context context)
 					throws IOException, InterruptedException {
-				passenN.add("9");passenN.add("6");passenN.add("5");passenN.add("4");
-				passenN.add("3");passenN.add("2");passenN.add("1");passenN.add("0");
-				passenN.add("208");
+				//passenN
+				key_set.add("9");key_set.add("6");key_set.add("5");key_set.add("4");
+				key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
+				key_set.add("208");
+				//pickupD
+				key_set.add("2013-1-1");key_set.add("2013-1-2");key_set.add("2013-1-3");key_set.add("2013-1-4");key_set.add("2013-1-5");key_set.add("2013-1-6");key_set.add("2013-1-7");key_set.add("2013-1-8");
+				key_set.add("2013-1-9");key_set.add("2013-1-10");key_set.add("2013-1-11");key_set.add("2013-1-12");key_set.add("2013-1-13");key_set.add("2013-1-14");key_set.add("2013-1-15");key_set.add("2013-1-16");
+				key_set.add("2013-1-17");key_set.add("2013-1-18");key_set.add("2013-1-19");key_set.add("2013-1-20");key_set.add("2013-1-21");key_set.add("2013-1-22");key_set.add("2013-1-23");key_set.add("2013-1-24");
+				key_set.add("2013-1-25");key_set.add("2013-1-26");key_set.add("2013-1-27");key_set.add("2013-1-28");key_set.add("2013-1-29");key_set.add("2013-1-30");key_set.add("2013-1-31");
+				//dAge
+				key_set.add("7");key_set.add("6");key_set.add("5");key_set.add("4");
+				key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
+				//dPOB
+				key_set.add("6");key_set.add("5");key_set.add("4");
+				key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
+				//iMarital
+				key_set.add("4");key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
 				super.setup(context);
 			}
 			@Override
@@ -37,12 +49,24 @@ public class Lean_Shuffle {
 					throws IOException, InterruptedException {
 				String valueStr=value.toString();
 				String [] values=valueStr.split("	");
+				byte[] decryptK=JAES.decrypt(JAES.parseHexStr2Byte(values[7]), password);
+				String s =new String(decryptK).trim();
+				if(! S_key_set.contains(s)){
+					S_key_set.add(s);
+				}
 				context.write(new Text(values[7]), new Text(new String(JAES.parseByte2HexStr(encryptV))));	
 			}
 			@Override
 			protected void cleanup(Mapper<LongWritable, Text, Text, Text>.Context context)
 					throws IOException, InterruptedException {
 				// TODO Auto-generated method stub
+				 for (String entry : key_set){
+						if(! S_key_set.contains(entry)){
+							byte[] encryptK=JAES.encrypt(entry, password);
+							byte[] encryptV=JAES.encrypt("0", password);
+							context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))), new Text(new String(JAES.parseByte2HexStr(encryptV))));
+						}
+					}
 				super.cleanup(context);
 				
 			}
@@ -91,23 +115,17 @@ public class Lean_Shuffle {
 					count+=1;
 				}
 				byte[] encryptV=JAES.encrypt(String.valueOf(count), password);
-				byte[] decryptK=JAES.decrypt(JAES.parseHexStr2Byte(key.toString()), password);
-				String s =new String(decryptK).trim();
-				if(! S_passenN.contains(s)){
-					S_passenN.add(s);
-				}
+//				byte[] decryptK=JAES.decrypt(JAES.parseHexStr2Byte(key.toString()), password);
+//				String s =new String(decryptK).trim();
+//				if(! S_passenN.contains(s)){
+//					S_passenN.add(s);
+//				}
 				context.write(key, new Text(new String(JAES.parseByte2HexStr(encryptV))));
 			}
 			@Override
 			protected void cleanup(Reducer<Text, Text, Text, Text>.Context context)
 					throws IOException, InterruptedException {
-				 for (String entry : passenN){
-					if(! S_passenN.contains(entry)){
-						byte[] encryptK=JAES.encrypt(entry, password);
-						byte[] encryptV=JAES.encrypt("0", password);
-						context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))), new Text(new String(JAES.parseByte2HexStr(encryptV))));
-					}
-				}
+				
 				super.cleanup(context);
 				
 			}
