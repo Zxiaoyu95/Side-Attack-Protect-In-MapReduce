@@ -18,7 +18,7 @@ import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 
-public class Full_Shuffle {
+public class Full_Shuffle_2j {
 	static int numReduceTasks =7;
 	static String password="xidian320";
 	static byte[] encryptV=JAES.encrypt("1", password);
@@ -29,23 +29,23 @@ public class Full_Shuffle {
 		@Override
 		protected void setup(Mapper<LongWritable, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
-			//passenN
-			key_set.add("9");key_set.add("6");key_set.add("5");key_set.add("4");
-			key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
-			key_set.add("208");
-			//pickupD
+			//passenN7
+//			key_set.add("9");key_set.add("6");key_set.add("5");key_set.add("4");
+//			key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
+//			key_set.add("208");
+			//pickupD5
 			key_set.add("2013-1-1");key_set.add("2013-1-2");key_set.add("2013-1-3");key_set.add("2013-1-4");key_set.add("2013-1-5");key_set.add("2013-1-6");key_set.add("2013-1-7");key_set.add("2013-1-8");
 			key_set.add("2013-1-9");key_set.add("2013-1-10");key_set.add("2013-1-11");key_set.add("2013-1-12");key_set.add("2013-1-13");key_set.add("2013-1-14");key_set.add("2013-1-15");key_set.add("2013-1-16");
 			key_set.add("2013-1-17");key_set.add("2013-1-18");key_set.add("2013-1-19");key_set.add("2013-1-20");key_set.add("2013-1-21");key_set.add("2013-1-22");key_set.add("2013-1-23");key_set.add("2013-1-24");
 			key_set.add("2013-1-25");key_set.add("2013-1-26");key_set.add("2013-1-27");key_set.add("2013-1-28");key_set.add("2013-1-29");key_set.add("2013-1-30");key_set.add("2013-1-31");
-			//dAge
-			key_set.add("7");key_set.add("6");key_set.add("5");key_set.add("4");
-			key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
-			//dPOB
-			key_set.add("6");key_set.add("5");key_set.add("4");
-			key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
-			//iMarital
-			key_set.add("4");key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
+			//dAge1
+//			key_set.add("7");key_set.add("6");key_set.add("5");key_set.add("4");
+//			key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
+			//dPOB35
+//			key_set.add("6");key_set.add("5");key_set.add("4");
+//			key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
+			//iMarital29
+//			key_set.add("4");key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
 			super.setup(context);
 		}
 		@Override
@@ -53,12 +53,24 @@ public class Full_Shuffle {
 				throws IOException, InterruptedException {
 			String valueStr=value.toString();
 			String [] values=valueStr.split("	");
-			context.write(new Text(values[7]), new Text(new String(JAES.parseByte2HexStr(encryptV))));
+			byte[] decryptK=JAES.decrypt(JAES.parseHexStr2Byte(values[5]), password);
+			String s =new String(decryptK).trim();
+			if(! S_key_set.contains(s)){
+				S_key_set.add(s);
+			}
+			context.write(new Text(values[5]), new Text(new String(JAES.parseByte2HexStr(encryptV))));
 		}
 		@Override
 		protected void cleanup(Mapper<LongWritable, Text, Text, Text>.Context context)
 			throws IOException, InterruptedException {
 		// TODO Auto-generated method stub
+			 for (String entry : key_set){
+					if(! S_key_set.contains(entry)){
+						byte[] encryptK=JAES.encrypt(entry, password);
+						byte[] encryptV=JAES.encrypt("0", password);
+						context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))), new Text(new String(JAES.parseByte2HexStr(encryptV))));
+					}
+				}
 		super.cleanup(context);
 		}
 	}
@@ -105,7 +117,6 @@ public class Full_Shuffle {
 		@Override
 		protected void cleanup(Reducer<Text, Text, Text, Text>.Context context)
 				throws IOException, InterruptedException {
-			// TODO Auto-generated method stub
 			super.cleanup(context);
 		}
 	}
@@ -132,29 +143,17 @@ public class Full_Shuffle {
 				byte[] decryptK=JAES.decrypt(JAES.parseHexStr2Byte(split[0]), password);	
 				byte[] decryptV=JAES.decrypt(JAES.parseHexStr2Byte(split[1]), password);	
 				String keyStr=new String(decryptK).trim();
-				if(! S_key_set.contains(keyStr)){
-					S_key_set.add(keyStr);
-				}
 				String valueStr=new String(decryptV).trim();
 				int r=(keyStr.hashCode()&Integer.MAX_VALUE)%numReduceTasks;
 				byte[] encryptK=JAES.encrypt(keyStr, password);
 				for(int i=0;i<numReduceTasks;i++){
 					byte[] encryptV=JAES.encrypt(valueStr+"_"+i+"#"+r, password);
-				context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))),new Text(new String(JAES.parseByte2HexStr(encryptV))));
+				    context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))),new Text(new String(JAES.parseByte2HexStr(encryptV))));
 				}
 			}
 			@Override
 			protected void cleanup(Mapper<LongWritable, Text, Text, Text>.Context context)
 			throws IOException, InterruptedException {
-				 for (String entry : key_set){
-						if(! S_key_set.contains(entry)){
-							for(int i=0;i<numReduceTasks;i++){
-								byte[] encryptK=JAES.encrypt(entry, password);
-								byte[] encryptV=JAES.encrypt("0_"+i+"#88", password);
-								context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))), new Text(new String(JAES.parseByte2HexStr(encryptV))));
-							}
-						}
-					}
 			super.cleanup(context);
 			}
 		}
@@ -209,7 +208,7 @@ public class Full_Shuffle {
 //    	Job job1 =Job.getInstance(conf,"job1"); 
     	Job job1 =new Job();
     	//设置job的运行主类
-    	job1.setJarByClass(Full_Shuffle.class);
+    	job1.setJarByClass(Full_Shuffle_2j.class);
     	FileInputFormat.setInputPaths(job1, new Path(args[0]));
     	//对map阶段进行设置
     	job1.setMapperClass(MyMapper.class);
@@ -232,7 +231,7 @@ public class Full_Shuffle {
 //        Job job2 =Job.getInstance(conf,"job2");
         Job job2 =new Job();
     	//设置job的运行主类
-        job2.setJarByClass(Full_Shuffle.class);
+        job2.setJarByClass(Full_Shuffle_2j.class);
     	FileInputFormat.setInputPaths(job2, new Path(args[1]));
     	//对map阶段进行设置
     	job2.setMapperClass(MyMapper2.class);
