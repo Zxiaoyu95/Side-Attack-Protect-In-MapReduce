@@ -32,15 +32,21 @@ public class Safe_Shuffle {
 				//dummy
 				key_set.add("dummy1");key_set.add("dummy2");key_set.add("dummy3");key_set.add("dummy4");
 				key_set.add("dummy5");key_set.add("dummy6");key_set.add("dummy7");key_set.add("dummy8");
+				key_set.add("dummy9");key_set.add("dummy10");key_set.add("dummy11");key_set.add("dummy12");
+				key_set.add("dummy13");key_set.add("dummy14");key_set.add("dummy15");key_set.add("dummy16");
+				key_set.add("dummy17");key_set.add("dummy18");key_set.add("dummy19");key_set.add("dummy20");
+				key_set.add("dummy21");key_set.add("dummy22");key_set.add("dummy23");key_set.add("dummy24");
+				key_set.add("dummy25");key_set.add("dummy26");key_set.add("dummy27");key_set.add("dummy28");
+				key_set.add("dummy29");key_set.add("dummy30");key_set.add("dummy31");key_set.add("dummy32");
 				//passenN7
 //				key_set.add("9");key_set.add("6");key_set.add("5");key_set.add("4");
 //				key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
 //				key_set.add("208");
 				//pickupD5
-			    key_set.add("2013-1-1");key_set.add("2013-1-2");key_set.add("2013-1-3");key_set.add("2013-1-4");key_set.add("2013-1-5");key_set.add("2013-1-6");key_set.add("2013-1-7");key_set.add("2013-1-8");
-				key_set.add("2013-1-9");key_set.add("2013-1-10");key_set.add("2013-1-11");key_set.add("2013-1-12");key_set.add("2013-1-13");key_set.add("2013-1-14");key_set.add("2013-1-15");key_set.add("2013-1-16");
-			    key_set.add("2013-1-17");key_set.add("2013-1-18");key_set.add("2013-1-19");key_set.add("2013-1-20");key_set.add("2013-1-21");key_set.add("2013-1-22");key_set.add("2013-1-23");key_set.add("2013-1-24");
-				key_set.add("2013-1-25");key_set.add("2013-1-26");key_set.add("2013-1-27");key_set.add("2013-1-28");key_set.add("2013-1-29");key_set.add("2013-1-30");key_set.add("2013-1-31");
+//			    key_set.add("2013-1-1");key_set.add("2013-1-2");key_set.add("2013-1-3");key_set.add("2013-1-4");key_set.add("2013-1-5");key_set.add("2013-1-6");key_set.add("2013-1-7");key_set.add("2013-1-8");
+//				key_set.add("2013-1-9");key_set.add("2013-1-10");key_set.add("2013-1-11");key_set.add("2013-1-12");key_set.add("2013-1-13");key_set.add("2013-1-14");key_set.add("2013-1-15");key_set.add("2013-1-16");
+//			    key_set.add("2013-1-17");key_set.add("2013-1-18");key_set.add("2013-1-19");key_set.add("2013-1-20");key_set.add("2013-1-21");key_set.add("2013-1-22");key_set.add("2013-1-23");key_set.add("2013-1-24");
+//				key_set.add("2013-1-25");key_set.add("2013-1-26");key_set.add("2013-1-27");key_set.add("2013-1-28");key_set.add("2013-1-29");key_set.add("2013-1-30");key_set.add("2013-1-31");
 				//dAge1
 //		        key_set.add("7");key_set.add("6");key_set.add("5");key_set.add("4");
 //		        key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
@@ -48,15 +54,15 @@ public class Safe_Shuffle {
 //				key_set.add("6");key_set.add("5");key_set.add("4");
 // 				key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
 				//iMarital29
-//				key_set.add("4");key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
-//				super.setup(context);
+				key_set.add("4");key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
+				super.setup(context);
 			}
 			@Override
 			protected void map(LongWritable key, Text value, Context context)
 					throws IOException, InterruptedException {
 				String valueStr=value.toString();
 				String [] values=valueStr.split("	");
-				byte[] decryptK=JAES.decrypt(JAES.parseHexStr2Byte(values[5]), password);
+				byte[] decryptK=JAES.decrypt(JAES.parseHexStr2Byte(values[29]), password);
 				String strK =new String(decryptK).trim();
 				if(! S_key_set.contains(strK)){
 					S_key_set.add(strK);
