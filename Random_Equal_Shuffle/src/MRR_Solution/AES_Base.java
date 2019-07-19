@@ -29,9 +29,6 @@ public class AES_Base {
 				throws IOException, InterruptedException {
 			String valueStr=value.toString();
 			String [] values=valueStr.split("	");
-//			byte[] encryptK=JAES.encrypt(values[5], password);
-//			byte[] encryptV=JAES.encrypt("1", password);
-//			context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))), new Text(new String(JAES.parseByte2HexStr(encryptV))));
 			context.write(new Text(values[29]), new Text(new String(JAES.parseByte2HexStr(encryptV))));
 		}
 		@Override
@@ -117,7 +114,7 @@ public class AES_Base {
     	job.setReducerClass(ShuffleReduce.class);
     	job.setPartitionerClass(MyPartitioner.class);
     	job.setOutputKeyClass(Text.class);
-    	job.setNumReduceTasks(7);//reduce 数量设定
+    	job.setNumReduceTasks(4);//reduce 数量设定
     	job.setOutputValueClass(Text.class);
     	FileOutputFormat.setOutputPath(job, new Path(args[1]));
     	//提交job

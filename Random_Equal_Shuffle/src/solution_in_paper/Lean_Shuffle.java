@@ -25,23 +25,23 @@ public class Lean_Shuffle {
 			@Override
 			protected void setup(Mapper<LongWritable, Text, Text, Text>.Context context)
 					throws IOException, InterruptedException {
-				//passenN
+				//passenN7
 //				key_set.add("9");key_set.add("6");key_set.add("5");key_set.add("4");
 //				key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
-//				key_set.add("208");
-				//pickupD
+//				key_set.add("208");key_set.add("255");
+				//pickupD5
 //			key_set.add("2013-1-1");key_set.add("2013-1-2");key_set.add("2013-1-3");key_set.add("2013-1-4");key_set.add("2013-1-5");key_set.add("2013-1-6");key_set.add("2013-1-7");key_set.add("2013-1-8");
 //				key_set.add("2013-1-9");key_set.add("2013-1-10");key_set.add("2013-1-11");key_set.add("2013-1-12");key_set.add("2013-1-13");key_set.add("2013-1-14");key_set.add("2013-1-15");key_set.add("2013-1-16");
 //			key_set.add("2013-1-17");key_set.add("2013-1-18");key_set.add("2013-1-19");key_set.add("2013-1-20");key_set.add("2013-1-21");key_set.add("2013-1-22");key_set.add("2013-1-23");key_set.add("2013-1-24");
 //				key_set.add("2013-1-25");key_set.add("2013-1-26");key_set.add("2013-1-27");key_set.add("2013-1-28");key_set.add("2013-1-29");key_set.add("2013-1-30");key_set.add("2013-1-31");
-				//dAge
+				//dAge1
 //		key_set.add("7");key_set.add("6");key_set.add("5");key_set.add("4");
 //		key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
-				//dPOB
+				//dPOB35
 //				key_set.add("6");key_set.add("5");key_set.add("4");
-// 				key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
-				//iMarital
-//				key_set.add("4");key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
+//				key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
+				//iMarital29
+			key_set.add("4");key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
 //				super.setup(context);
 			}
 			@Override
@@ -87,10 +87,14 @@ public class Lean_Shuffle {
 				String valueStr=new String(value).trim();
 				sum+=Integer.parseInt(valueStr);
 			}
-			if(sum !=0){
+			if(sum !=0){//ецЪ§Он
 				byte[] k=JAES.decrypt(JAES.parseHexStr2Byte(key.toString()), password);
 				context.write(new Text(new String(k).trim().replace("\"", "")), new Text(String.valueOf(sum)));
 				}
+			if(sum == 0){
+				byte[] k=JAES.decrypt(JAES.parseHexStr2Byte(key.toString()), password);
+				context.write(new Text(new String(k).trim().replace("\"", "")), new Text(String.valueOf(0)));
+			}
 			
 			}	
 			@Override

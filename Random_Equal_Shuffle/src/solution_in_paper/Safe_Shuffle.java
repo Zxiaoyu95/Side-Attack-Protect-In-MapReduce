@@ -32,16 +32,16 @@ public class Safe_Shuffle {
 				//dummy
 				key_set.add("dummy1");key_set.add("dummy2");key_set.add("dummy3");key_set.add("dummy4");
 				key_set.add("dummy5");key_set.add("dummy6");key_set.add("dummy7");key_set.add("dummy8");
-				key_set.add("dummy9");key_set.add("dummy10");key_set.add("dummy11");key_set.add("dummy12");
-				key_set.add("dummy13");key_set.add("dummy14");key_set.add("dummy15");key_set.add("dummy16");
-				key_set.add("dummy17");key_set.add("dummy18");key_set.add("dummy19");key_set.add("dummy20");
-				key_set.add("dummy21");key_set.add("dummy22");key_set.add("dummy23");key_set.add("dummy24");
-				key_set.add("dummy25");key_set.add("dummy26");key_set.add("dummy27");key_set.add("dummy28");
-				key_set.add("dummy29");key_set.add("dummy30");key_set.add("dummy31");key_set.add("dummy32");
+//				key_set.add("dummy9");key_set.add("dummy10");key_set.add("dummy11");key_set.add("dummy12");
+//				key_set.add("dummy13");key_set.add("dummy14");key_set.add("dummy15");key_set.add("dummy16");
+//				key_set.add("dummy17");key_set.add("dummy18");key_set.add("dummy19");key_set.add("dummy20");
+//				key_set.add("dummy21");key_set.add("dummy22");key_set.add("dummy23");key_set.add("dummy24");
+//				key_set.add("dummy25");key_set.add("dummy26");key_set.add("dummy27");key_set.add("dummy28");
+//				key_set.add("dummy29");key_set.add("dummy30");key_set.add("dummy31");key_set.add("dummy32");
 				//passenN7
 //				key_set.add("9");key_set.add("6");key_set.add("5");key_set.add("4");
 //				key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
-//				key_set.add("208");
+//				key_set.add("208");key_set.add("255");
 				//pickupD5
 //			    key_set.add("2013-1-1");key_set.add("2013-1-2");key_set.add("2013-1-3");key_set.add("2013-1-4");key_set.add("2013-1-5");key_set.add("2013-1-6");key_set.add("2013-1-7");key_set.add("2013-1-8");
 //				key_set.add("2013-1-9");key_set.add("2013-1-10");key_set.add("2013-1-11");key_set.add("2013-1-12");key_set.add("2013-1-13");key_set.add("2013-1-14");key_set.add("2013-1-15");key_set.add("2013-1-16");
@@ -52,7 +52,7 @@ public class Safe_Shuffle {
 //		        key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
 				//dPOB35
 //				key_set.add("6");key_set.add("5");key_set.add("4");
-// 				key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
+//				key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
 				//iMarital29
 				key_set.add("4");key_set.add("3");key_set.add("2");key_set.add("1");key_set.add("0");
 				super.setup(context);
@@ -98,7 +98,7 @@ public class Safe_Shuffle {
 					int r=Integer.parseInt(keylongstr.substring(keylongstr.indexOf("#")+1,keylongstr.length()));
 					byte[] decryptV=JAES.decrypt(JAES.parseHexStr2Byte(value.toString()), password);
 					String v = new String(decryptV).trim();
-					if(j==r && !result.containsKey(mykey)){
+					if(!result.containsKey(mykey)){
 						result.put(mykey, "0");
 					}
 					for(Map.Entry<String,String> str : result.entrySet()){
@@ -117,9 +117,9 @@ public class Safe_Shuffle {
 			protected void cleanup(Reducer<Text, Text, Text, Text>.Context context)
 					throws IOException, InterruptedException {
 				for(Map.Entry<String,String> str : result.entrySet()){
-					 if( !str.getValue().equals("0")){
+					// if( !str.getValue().equals("0")){
 						 context.write(new Text(str.getKey()), new Text(str.getValue()));
-		            }
+		           // }
 				}
 				result = new HashMap<String,String>();
 				super.cleanup(context);

@@ -49,7 +49,7 @@ public class AES_MRRA {
 //			byte[] encryptK=JAES.encrypt(values[5], password);
 //			byte[] encryptV=JAES.encrypt("1", password);
 //			context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))), new Text(new String(JAES.parseByte2HexStr(encryptV))));
-			context.write(new Text(values[29]), new Text(new String(JAES.parseByte2HexStr(encryptV))));
+			context.write(new Text(values[35]), new Text(new String(JAES.parseByte2HexStr(encryptV))));
 		}
 		@Override
 		protected void cleanup(Mapper<LongWritable, Text, Text, Text>.Context context)

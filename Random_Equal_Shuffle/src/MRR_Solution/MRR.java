@@ -30,7 +30,7 @@ public class MRR {
 				throws IOException, InterruptedException {
 			String valueStr=value.toString();
 			String [] values=valueStr.split("	");
-			context.write(new Text(values[7].replace("\"", "")), new Text("1"));
+			context.write(new Text(values[29].replace("\"", "")), new Text("1"));
 			
 		}
 	}

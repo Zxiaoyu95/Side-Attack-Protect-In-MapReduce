@@ -25,6 +25,7 @@ public class AES_MRRB_passenN {
 	static byte[] encryptV=JAES.encrypt("1", password);
 	static ArrayList<String> passenN = new ArrayList<String>();
 	static ArrayList<String> S_passenN = new ArrayList<String>();
+
 /*job1*/
 	 public static class MyMapper extends Mapper<LongWritable,Text,Text,Text>{
 		@Override
@@ -33,6 +34,7 @@ public class AES_MRRB_passenN {
 			passenN.add("9");passenN.add("6");passenN.add("5");passenN.add("4");
 			passenN.add("3");passenN.add("2");passenN.add("1");passenN.add("0");
 			passenN.add("208");
+			
 			super.setup(context);
 		}
 		@Override

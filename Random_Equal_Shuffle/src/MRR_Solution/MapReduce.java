@@ -22,7 +22,7 @@ public class MapReduce {
 				throws IOException, InterruptedException {
 			String valueStr=value.toString();
 			String [] values=valueStr.split("	");	
-			context.write(new Text(values[7].replace("\"", "")), new IntWritable(1));
+			context.write(new Text(values[1].replace("\"", "")), new IntWritable(1));
 	
 		}
 	}
