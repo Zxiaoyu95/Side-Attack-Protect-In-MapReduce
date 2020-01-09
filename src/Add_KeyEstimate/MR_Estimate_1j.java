@@ -1,4 +1,4 @@
-package solution_in_paper;
+package Add_KeyEstimate;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,13 +17,20 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 
-public class Full_Shuffle_1j {
+import solution_in_paper.JAES;
+
+
+
+public class MR_Estimate_1j {
+
+
 	static int numReduceTasks =4;
 	static String password="xidian320";
 	static byte[] encryptV=JAES.encrypt("1", password);
 	static ArrayList<String> key_set = new ArrayList<String>();
 	static ArrayList<String> S_key_set = new ArrayList<String>();
 	static Map<String,String> result = new HashMap<String,String>();
+	static int numberKey;
 	 public static class MyMapper extends Mapper<LongWritable,Text,Text,Text>{
 			@Override
 			protected void setup(Mapper<LongWritable, Text, Text, Text>.Context context)
@@ -65,6 +72,10 @@ public class Full_Shuffle_1j {
 			protected void cleanup(Mapper<LongWritable, Text, Text, Text>.Context context)
 					throws IOException, InterruptedException {
 				// TODO Auto-generated method stub
+				int mapkey = S_key_set.size();
+				byte[] encryptK=JAES.encrypt("KeyMax"+"_"+0+"#"+mapkey, password);
+				byte[] encryptM=JAES.encrypt("1", password);
+				context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))),new Text(new String(JAES.parseByte2HexStr(encryptM))));
 				super.cleanup(context);
 				
 			}
@@ -125,6 +136,7 @@ public class Full_Shuffle_1j {
 			}
 			@Override
 			protected void reduce(Text key, Iterable<Text> values,Context context) throws IOException, InterruptedException {
+				
 				int count=0;
 				for(Text v:values){
 					count+=1;
@@ -134,33 +146,41 @@ public class Full_Shuffle_1j {
 				byte[] encryptV=JAES.encrypt(String.valueOf(count), password);
 				int r=Integer.parseInt(keylongstr.substring(keylongstr.indexOf("#")+1,keylongstr.length()));
 				String mykey = keylongstr.substring(1,keylongstr.indexOf("_"));
-				for(int i=0;i<numReduceTasks;i++){
-					byte[] encryptK=JAES.encrypt(mykey+"_"+i+"#"+r, password);
-					context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))),new Text(new String(JAES.parseByte2HexStr(encryptV))));
-				}	
+				if(mykey != "KeyMax") {
+					for(int i=0;i<numReduceTasks;i++){
+						byte[] encryptK=JAES.encrypt(mykey+"_"+i+"#"+r, password);
+						context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))),new Text(new String(JAES.parseByte2HexStr(encryptV))));
+					}	
+				}
+				
 			}
 			@Override
 			protected void cleanup(Reducer<Text, Text, Text, Text>.Context context)
 					throws IOException, InterruptedException {
-				 for (String entry : key_set){
-					    int r=(entry.hashCode()&Integer.MAX_VALUE)%numReduceTasks;
-						if(! S_key_set.contains(entry)){
-							for(int i=0;i<numReduceTasks;i++){
-								byte[] encryptK=JAES.encrypt(entry+"_"+i+"#"+r, password);
-								byte[] encryptV=JAES.encrypt("0", password);
-								context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))), new Text(new String(JAES.parseByte2HexStr(encryptV))));
-							}
-						}
+			    int Tnum = S_key_set.size();
+				int r=("FAKE".hashCode()&Integer.MAX_VALUE)%numReduceTasks;
+				if(Tnum < numberKey){
+					for(int j=0; j<(numberKey-Tnum);j++) {
+						for(int i=0;i<numReduceTasks;i++){
+							byte[] encryptK=JAES.encrypt("FAKE"+"_"+i+"#"+r, password);
+							byte[] encryptV=JAES.encrypt("0", password);
+							context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))), new Text(new String(JAES.parseByte2HexStr(encryptV))));
+							} 
 					}
-				super.cleanup(context);
+				}
 				
-			}
+			super.cleanup(context);
+			
+		}
 		}
 		static class MyPartitioner extends HashPartitioner<Text,Text>{
 			@Override
 			public int getPartition(Text key, Text value, int numReduceTasks) {
 				byte[] decryptK=JAES.decrypt(JAES.parseHexStr2Byte(key.toString()), password);
 				String vuleStr=new String(decryptK).trim();
+				String keylongstr = new String(decryptK).trim().replace("\"", "");
+				String mykey = keylongstr.substring(1,keylongstr.indexOf("_"));
+				
 				int r = Integer.parseInt(vuleStr.substring(vuleStr.indexOf("_")+1,vuleStr.indexOf("#")));
 				return r;
 			}
@@ -172,7 +192,7 @@ public class Full_Shuffle_1j {
 //		    	Job job =Job.getInstance(conf,"mapreduce");
 		    	Job job =new Job();
 		    	//设置job的运行主类
-		    	job.setJarByClass(Full_Shuffle_1j.class);
+		    	job.setJarByClass(MR_Estimate_1j.class);
 		    	//对map阶段进行设置
 		    	job.setMapperClass(MyMapper.class);
 		    	job.setMapOutputKeyClass(Text.class);
@@ -193,4 +213,5 @@ public class Full_Shuffle_1j {
 		    	System.out.println("运行时间："+(endTime-startTime)+"ms");
 		    	System.exit(isok);
 		    }
+
 }

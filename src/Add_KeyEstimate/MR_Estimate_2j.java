@@ -22,11 +22,11 @@ import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 
 import solution_in_paper.JAES; 
 
-public class MR_Estimate{
-    static int numReduceTasks =7;
+public class MR_Estimate_2j{
+    static int numReduceTasks =4;
 	static String password="xidian320";
 	static int numberKey;
-	static byte[] encryptV=JAES.encrypt("1", password);
+	
 	static ArrayList<String> key_set = new ArrayList<String>();
 	static ArrayList<String> S_key_set = new ArrayList<String>();
 	static HyperLogLog hyperLogLog = new HyperLogLog(0.1325);//64个桶
@@ -115,6 +115,8 @@ public class MR_Estimate{
 			}		
 			int r=(strK.hashCode()&Integer.MAX_VALUE)%numReduceTasks;
 			byte[] encryptK=JAES.encrypt(strK+"_"+r+"#"+r, password);
+		    byte[] encryptV=JAES.encrypt("1", password);
+		   
 			context.write(new Text(new String(JAES.parseByte2HexStr(encryptK))),new Text(new String(JAES.parseByte2HexStr(encryptV))));
 		}
 		@Override
@@ -232,7 +234,7 @@ public class MR_Estimate{
 //    	Job job1 =Job.getInstance(conf,"job1"); 
     	Job job1 =new Job();
     	//设置job的运行主类
-    	job1.setJarByClass(MR_Estimate.class);
+    	job1.setJarByClass(MR_Estimate_2j.class);
     	FileInputFormat.setInputPaths(job1, new Path(args[0]));
     	//对map阶段进行设置
     	job1.setMapperClass(MyMapper.class);
@@ -254,7 +256,7 @@ public class MR_Estimate{
 //        Job job2 =Job.getInstance(conf,"job2");
         Job job2 =new Job();
     	//设置job的运行主类
-        job2.setJarByClass(MR_Estimate.class);
+        job2.setJarByClass(MR_Estimate_2j.class);
     	FileInputFormat.setInputPaths(job2, new Path(args[0]));
     	//对map阶段进行设置
     	job2.setMapperClass(MyMapper2.class);
